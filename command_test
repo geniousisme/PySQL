@@ -1,3 +1,11 @@
 root
 define relation STUDENT
+define relation STUDENT2
+set attribute character 20 SNAME
+set attribute integer SID
+
+set attribute integer SPOINT1 range 0 100
+set attribute integer SPOINT2 range 0 100
+set primary key SID
+
 
