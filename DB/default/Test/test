@@ -1,0 +1,22 @@
+# coding: utf-8 
+這是一本重新撰寫的 Ruby on Rails 自學書籍（與 Rails 3 版本內容完全不同）：
+
+以 Rails 4.0.0 正式版為範例
+以 Ruby 2.0.0 為語言版本
+以 OSX 10.8 為安裝環境
+全新的範例 （ Group 討論區 ）
+Rails 4.0+ 起內建的新 feature 與 syntax 示範
+加入了基本「整理程式碼」的技巧：before_action, helper, partial, scope...
+Rails 4.0 與主流 gem 的 hack 解法 （絕對節省 debug 的時間）
+devise & strong parameters
+bootstrap
+asset pipeline deploy setting
+compass with Rails 4.0
+production 裝機實例，附 capistrano recipe
+（簡單來說，如果你手上有 Rails 4 專案產生出來但跑不起來，這裡有幾乎 100% 的解法...）
+
+價格為 : $12.95 USD
+
+https://leanpub.com/rails-101
+
+雖然本書價格稍微調漲了。但是這本書裡面送了 $10 USD 的 Logdown 的折價卷作為補償。歡迎多多利用 Logdown 作為程式開發筆記用的 Blog。heyheyhey

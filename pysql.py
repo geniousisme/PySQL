@@ -1,9 +1,21 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*- 
+
+# primary key shouldnt set twice times
+# default(DB) -> Dir(Relation, ex.STUDENT is a relation, STUDENT.conf is the relation attribute setting config file)
+# And STUDENT_DB is the table we set for demo from STUDENT relation, the column attribute follow the conf file
+# if user dont use create database, then the DB default setting is in default Dir
+# 先求有，再求好，先把現在這版寫完，再來考慮有create database情況的事情
+# create 那邊的select DB 一定要再改好一點！！！
+
 import cmd
 import getpass
 import os
 import re
 import sys
 
+# the module defined by myself
+import DBMS
 import File
 
 class PySQL(cmd.Cmd):
@@ -11,7 +23,7 @@ class PySQL(cmd.Cmd):
   def __init__(self):
     cmd.Cmd.__init__(self)
     self.prompt = 'pysql>>> '
-    self.intro  = "***Chris Hsu own SQL DB for DBMS project by Python***"
+    self.intro  = "****** Chris Hsu own SQL DB for DBMS project by Python ******"
     self.authority = 'user'
   def do_hist(self, args):
     """Print a list of commands that have been entered"""
@@ -58,7 +70,7 @@ class PySQL(cmd.Cmd):
     # print 'set command!!!'
     if self.authority == 'admin':
       # args = args.split()[0].lower() + ' ' + args.split()[1]
-      print 'args:', args
+      # print 'args:', args
       match = re.search('attribute\s*\w*', args)
       if match is None:
         if re.search('primary\s*key\s*\w*', args):
@@ -88,15 +100,55 @@ class PySQL(cmd.Cmd):
     self.do_set( args )
 
   def do_create(self, args):
-    print args
-    if self.primaryKeyExist && self.authority == 'admin':
-      
+    argList = args.split()
+    if argList[0] == 'table' or argList[0] == 'TABLE':
+      if self.authority == 'admin': 
+        # tmpRelationName = './DB/default/' + argList[1] + '/'
+        tmpDBName = './DB/default/'
+        tmpTableConfName = tmpDBName + argList[1] + '/' + argList[1] + '.conf'
+        if os.path.exists(tmpTableConfName): 
+          # self.selectRelation = tmpRelationName
+          self.selectDB = tmpDBName
+          tmpTableConf = open(tmpTableConfName, 'r')
+          if tmpTableConf.read().find('*') >= 0 or self.primaryKeyExist: 
+            tmpTableConf.close()
+            os.mkdir('./DB/default/' + argList[1] + '/' + argList[2] + '/')
+            # newTable = open('./DB/default/' + argList[1] + '/' + argList[2] + '/' + argList[2], 'a')
+            # newTable.close()
+          else: '[Setting Error] No column was set as primary key, try "set --help" or "set -h" to get help.'
+        else: print '[Relation Error] There is no such relation. Plz try "set --help" or "set -h" to get help.'
+      else: print '[Error] authority not enough.'
+    else: print '[Syntax Error] try "create table --help" or "create table -h" to get help.' 
 
-    else: print '[Setting Error] you did not set any column as primary key yet, try "set --help" or "set -h" to get help.'
-    
+  def do_CREATE(self, args):
+    self.do_create( args )   
   
   def do_insert(self, args):
-    print "insert!!"
+    argList = args.split()
+    if self.authority == 'admin':
+      if self.selectDB is not None:
+        selectTables2PathDict = DBMS.findAllTables2PathDict(self.selectDB)
+        if argList[0] in selectTables2PathDict.keys():
+          tableName = argList.pop(0) 
+          if 'values' in argList: argList.remove('values')
+          if DBMS.MatchTableSetting(selectTables2PathDict[ tableName ], argList):
+            print 'yes!!!!!!!!!!!!! Fit all condition!!'
+            # DBMS.insertTable(selectTables2PathDict[ tableName ], argList)
+          else:
+            print 'Nooooooooooooooooooo!!!!!!!!!!!!!'
+
+      else: print '[Insert Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
+    else: print '[Error] authority not enough.'
+
+  def do_show(self, args): #show all DB/tables
+    if args == 'databases' or args == 'DATABASES':
+      print "show all databases:"
+      for DB in os.listdir('./DB'):
+        print DB 
+
+  def do_use(self, args): #assign which DB to use 
+    if args in DBMS.findAllDBs(): self.selectDB = './DB/' + args
+    else: print '[Use Error] There is no such DB, check again!!'
   
   def do_select(self, args):
     print "select!!"
@@ -122,6 +174,8 @@ class PySQL(cmd.Cmd):
     self._globals = {}
     self.cmd   = None
     self.tableConf = None
+    # self.selectRelation = None
+    self.selectDB = None
     self.primaryKeyExist = False
 
   def postloop(self):
