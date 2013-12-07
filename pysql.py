@@ -18,6 +18,9 @@ import sys
 import DBMS
 import File
 
+def str2List(str):
+  return str.split()
+
 class PySQL(cmd.Cmd):
 
   def __init__(self):
@@ -132,32 +135,60 @@ class PySQL(cmd.Cmd):
           tableName = argList.pop(0) 
           if 'values' in argList: argList.remove('values')
           if DBMS.MatchTableSetting(selectTables2PathDict[ tableName ], argList):
-            print 'yes!!!!!!!!!!!!! Fit all condition!!'
-            # DBMS.insertTable(selectTables2PathDict[ tableName ], argList)
-          else:
-            print 'Nooooooooooooooooooo!!!!!!!!!!!!!'
-
+            # print 'yes!!!!!!!!!!!!! Fit all condition!!'
+            DBMS.insertTable(selectTables2PathDict[ tableName ], argList)
+          # else:
+          #   print 'Nooooooooooooooooooo!!!!!!!!!!!!!'
       else: print '[Insert Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
     else: print '[Error] authority not enough.'
 
   def do_show(self, args): #show all DB/tables
     if args == 'databases' or args == 'DATABASES':
-      print "show all databases:"
+      print "###################"
       for DB in os.listdir('./DB'):
         print DB 
+      print "###################"
+  
+  def do_SHOW(self, args):
+    self.do_show( args )
 
   def do_use(self, args): #assign which DB to use 
-    if args in DBMS.findAllDBs(): self.selectDB = './DB/' + args
+    if args in DBMS.findAllDBs(): self.selectDB = './DB/' + args + '/'
     else: print '[Use Error] There is no such DB, check again!!'
+
+  def do_USE(self, args):
+    self.do_use( args )
   
   def do_select(self, args):
     print "select!!"
   
   def do_update(self, args):
     print "update"
+    argList = str2List(args)
+    if self.authority == 'admin':
+      if self.selectDB is not None:
+        selectTablePath, selectRecordPath = DBMS.findTableAndRecordPath(self.selectDB ,argList)
+        if selectTablePath is not None:
+          if selectRecordPath is not None:
+            DBMS.deleteRecord(selectRecordPath)
+          else: print '[Delete Error] The record does not exist. Plz try "use --help" or "use -h" to get help.'
+        else: print '[Delete Error] The table does not exist. Plz try "use --help" or "use -h" to get help.'
+      else: print '[Delete Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
+    else: print '[Error] authority not enough.'
+
   
   def do_delete(self, args):
-    print "delete"
+    argList = str2List(args)
+    if self.authority == 'admin':
+      if self.selectDB is not None:
+        selectTablePath, selectRecordPath = DBMS.findTableAndRecordPath(self.selectDB ,argList)
+        if selectTablePath is not None:
+          if selectRecordPath is not None:
+            DBMS.deleteRecord(selectRecordPath)
+          else: print '[Delete Error] The record does not exist. Plz try "use --help" or "use -h" to get help.'
+        else: print '[Delete Error] The table does not exist. Plz try "use --help" or "use -h" to get help.'
+      else: print '[Delete Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
+    else: print '[Error] authority not enough.'
 
   def emptyline(self):    
     """Do nothing on empty input line"""

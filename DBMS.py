@@ -7,6 +7,16 @@ import glob
 def findTableConfPath(tableAbsPath):
     return [tableConfPath for tableConfPath in glob.glob(os.path.dirname(tableAbsPath) + "/*.conf")][0]
 
+def findTableAndRecordPath(databasePath, argList):
+  recordPath = tablePath = None
+  for root, dirs, files in os.walk(databasePath, topdown=False):
+    for tableName in dirs: 
+      if tableName == argList[0]:
+        tablePath = os.path.join(root, tableName)
+        if os.path.exists(tablePath + '/' + argList[1]):  
+          recordPath = os.path.join(tablePath, argList[1])
+  return [tablePath, recordPath]
+
 def findAllTables2PathDict(relationPath):
   tableName2PathDict = {}
   for root, dirs, files in os.walk(relationPath, topdown=False):
@@ -19,16 +29,22 @@ def findAllTables2PathDict(relationPath):
 def findAllDBs():
   return os.listdir('./DB')
 
-def MatchTableSetting(tableAbsPath, argLsit):
+def MatchTableSetting(tableAbsPath, argList):
   tableConfPath = findTableConfPath(tableAbsPath)
   print 'tableConfPath', tableConfPath
   tableConf = open(tableConfPath, 'r')
-  argIter = argLsit.__iter__()
+  
+  if os.path.exists(tableAbsPath + '/' + argList[0]):
+    print '[Insert Error] Table with same primary key already exists.'
+    return False
+    
+  argIter = argList.__iter__()
   for line in tableConf.readlines():
     lineList = line.split()
     arg = argIter.next()
     print "lineList:", lineList
     print "arg:", arg
+
     if lineList[0].find('*') >= 0:
       if arg == 'null' or arg == 'nil':  
         print '[Insert Error] Primary Key Column must not be null or nil.'
@@ -55,8 +71,15 @@ def MatchTableSetting(tableAbsPath, argLsit):
   tableConf.close()
   return True
 
-def insertTable(tableAbsPath, argLsit):
-  print 'insert'
+def insertTable(tableAbsPath, argList):
+  # print 'insert'
+  newTable = open(tableAbsPath + '/' + argList.pop(0), 'a+')
+  for arg in argList:
+    newTable.write(arg+'\n')
+  newTable.close()
+
+def deleteRecord(recordAbsPath):
+  os.remove(recordAbsPath)
   
 
 
