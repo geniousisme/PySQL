@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
+#合併inser & update record
+#想辦法改成class寫法
 
 import os
 import glob
@@ -15,6 +17,7 @@ def findTableAndRecordPath(databasePath, argList):
         tablePath = os.path.join(root, tableName)
         if os.path.exists(tablePath + '/' + argList[1]):  
           recordPath = os.path.join(tablePath, argList[1])
+  argList.pop(0)
   return [tablePath, recordPath]
 
 def findAllTables2PathDict(relationPath):
@@ -29,12 +32,13 @@ def findAllTables2PathDict(relationPath):
 def findAllDBs():
   return os.listdir('./DB')
 
-def MatchTableSetting(tableAbsPath, argList):
+def MatchTableSetting(tableAbsPath, argList, sqlType):
+  argList.pop
   tableConfPath = findTableConfPath(tableAbsPath)
   print 'tableConfPath', tableConfPath
   tableConf = open(tableConfPath, 'r')
   
-  if os.path.exists(tableAbsPath + '/' + argList[0]):
+  if os.path.exists(tableAbsPath + '/' + argList[0]) and sqlType == 'insert':
     print '[Insert Error] Table with same primary key already exists.'
     return False
     
@@ -80,7 +84,13 @@ def insertTable(tableAbsPath, argList):
 
 def deleteRecord(recordAbsPath):
   os.remove(recordAbsPath)
-  
+
+def updateRecord(recordAbsPath, argList): 
+  newRecord = open(recordAbsPath, 'w')
+  for arg in argList[1:]:
+    newRecord.write(arg+'\n')
+  newRecord.close()
+
 
 
   # print tableConf.read()

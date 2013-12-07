@@ -21,6 +21,10 @@ import File
 def str2List(str):
   return str.split()
 
+def tableConfFormatter():
+  print 'tableConfFormatter'
+
+
 class PySQL(cmd.Cmd):
 
   def __init__(self):
@@ -130,13 +134,16 @@ class PySQL(cmd.Cmd):
     argList = args.split()
     if self.authority == 'admin':
       if self.selectDB is not None:
-        selectTables2PathDict = DBMS.findAllTables2PathDict(self.selectDB)
-        if argList[0] in selectTables2PathDict.keys():
-          tableName = argList.pop(0) 
+        # selectTables2PathDict = DBMS.findAllTables2PathDict(self.selectDB)
+        selectTablePath, selectRecordPath = DBMS.findTableAndRecordPath(self.selectDB ,argList)
+        if selectTablePath is not None:
+          # tableName = argList.pop(0) 
           if 'values' in argList: argList.remove('values')
-          if DBMS.MatchTableSetting(selectTables2PathDict[ tableName ], argList):
+          # if DBMS.MatchTableSetting(selectTables2PathDict[ tableName ], argList):
+          if DBMS.MatchTableSetting(selectTablePath, argList, 'insert'):
             # print 'yes!!!!!!!!!!!!! Fit all condition!!'
-            DBMS.insertTable(selectTables2PathDict[ tableName ], argList)
+            # DBMS.insertTable(selectTables2PathDict[ tableName ], argList)
+            DBMS.insertTable(selectTablePath, argList)
           # else:
           #   print 'Nooooooooooooooooooo!!!!!!!!!!!!!'
       else: print '[Insert Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
@@ -163,17 +170,18 @@ class PySQL(cmd.Cmd):
     print "select!!"
   
   def do_update(self, args):
-    print "update"
+    # print "update"
     argList = str2List(args)
     if self.authority == 'admin':
       if self.selectDB is not None:
         selectTablePath, selectRecordPath = DBMS.findTableAndRecordPath(self.selectDB ,argList)
         if selectTablePath is not None:
           if selectRecordPath is not None:
-            DBMS.deleteRecord(selectRecordPath)
-          else: print '[Delete Error] The record does not exist. Plz try "use --help" or "use -h" to get help.'
-        else: print '[Delete Error] The table does not exist. Plz try "use --help" or "use -h" to get help.'
-      else: print '[Delete Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
+            if DBMS.MatchTableSetting(selectTablePath, argList, 'update'):
+              DBMS.updateRecord(selectRecordPath, argList)
+          else: print '[Update Error] The record does not exist. Plz try "use --help" or "use -h" to get help.'
+        else: print '[Update Error] The table does not exist. Plz try "use --help" or "use -h" to get help.'
+      else: print '[Update Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
     else: print '[Error] authority not enough.'
 
   
@@ -244,7 +252,6 @@ class PySQL(cmd.Cmd):
     """If you want to stop the console, return something that evaluates to true.
        If you want to do some post command processing, do it here.
     """
-    if stop == 'skip': return stop
     print "post command, line:", line.strip()  
     print "there is stop:", stop
     return stop
