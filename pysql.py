@@ -7,6 +7,8 @@
 # if user dont use create database, then the DB default setting is in default Dir
 # 先求有，再求好，先把現在這版寫完，再來考慮有create database情況的事情
 # create 那邊的select DB 一定要再改好一點！！！
+########################## 使用者登錄那邊要改用檔案處理，密碼不要寫死
+# append to file那邊也要改用argFormatter的方式改寫
 
 import cmd
 import getpass
@@ -134,18 +136,11 @@ class PySQL(cmd.Cmd):
     argList = args.split()
     if self.authority == 'admin':
       if self.selectDB is not None:
-        # selectTables2PathDict = DBMS.findAllTables2PathDict(self.selectDB)
         selectTablePath, selectRecordPath = DBMS.findTableAndRecordPath(self.selectDB ,argList)
         if selectTablePath is not None:
-          # tableName = argList.pop(0) 
           if 'values' in argList: argList.remove('values')
-          # if DBMS.MatchTableSetting(selectTables2PathDict[ tableName ], argList):
           if DBMS.MatchTableSetting(selectTablePath, argList, 'insert'):
-            # print 'yes!!!!!!!!!!!!! Fit all condition!!'
-            # DBMS.insertTable(selectTables2PathDict[ tableName ], argList)
             DBMS.insertTable(selectTablePath, argList)
-          # else:
-          #   print 'Nooooooooooooooooooo!!!!!!!!!!!!!'
       else: print '[Insert Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
     else: print '[Error] authority not enough.'
 
@@ -167,10 +162,17 @@ class PySQL(cmd.Cmd):
     self.do_use( args )
   
   def do_select(self, args):
-    print "select!!"
+    argList = str2List(args)
+    if self.authority == 'admin':
+      if self.selectDB is not None:
+        selectTablePath = DBMS.findTableAndRecordPath(self.selectDB ,argList)[0]
+        if selectTablePath is not None:
+          DBMS.selectRecords(selectTablePath, argList)
+        else: print '[Select Error] The table does not exist. Plz try "use --help" or "use -h" to get help.'
+      else: print '[Select Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
+    else: print '[Error] authority not enough.'
   
   def do_update(self, args):
-    # print "update"
     argList = str2List(args)
     if self.authority == 'admin':
       if self.selectDB is not None:

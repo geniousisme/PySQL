@@ -22,5 +22,5 @@ delete  STUDENT_DB  102
 update STUDENT_DB  103 Student_Name4 65 95
 
 select SPOINT2 from STUDENT_DB where SPOINT1 < 70
-select SPOINT1 from STUDENT_DB_2 where SPOINT2 > 70
+select SPOINT1,SPOINT2,SNAME from STUDENT_DB_2 where SPOINT2 > 70
 
