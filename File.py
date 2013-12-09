@@ -9,7 +9,7 @@ def findContentAndPrimaryKeyIndex(fileObj, fileName, primaryColumnName):
   fileObj = open(fileName, 'r')
   fileContent = fileObj.read()
   fileObj.close()
-  primaryKeyIndex = fileContent.find(primaryColumnName)
+  primaryKeyIndex = fileContent.find(primaryColumnName) if fileContent.find('*') < 0 else -999
   return [fileContent, primaryKeyIndex]
 
 def setPrimaryKeyColumn(fileObj, fileName, fileContent, PrimaryKeyIndex):

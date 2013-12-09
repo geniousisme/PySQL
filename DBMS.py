@@ -8,7 +8,6 @@ import os
 import glob
 import File
 
-
 def columnStr2List(columnStr):
   return columnStr.replace(" ","").split(',')
 
@@ -26,6 +25,27 @@ def findPrimaryKeyColumnIndex(tableConfPath):
     if line.find('*') >= 0: primaryKeyIndex = index 
   tableConf.close()
   return primaryKeyIndex
+
+def isUser(password):
+  userAdminFile = open('./dbConfig/useradmin', 'r')
+  userPasswordList = userAdminFile.read().splitlines()
+  userAdminFile.close()
+
+  if password in userPasswordList:
+    return True
+  else:
+    return False
+
+def isAdmin(password):
+  sysAdminFile = open('./dbConfig/sysadmin', 'r')
+  sysPasswordList = sysAdminFile.read().splitlines()
+  sysAdminFile.close()
+
+  if password in sysPasswordList:
+    return True
+  else:
+    return False
+
 
 def getAllColumn2IndexDict(tableAbsPath):
   tableConf = open(findTableConfPath(tableAbsPath), 'r')
@@ -46,8 +66,10 @@ def findTableAndRecordPath(databasePath, argList):
     for tableName in dirs: 
       if tableName == argList[tableIndex]:
         tablePath = os.path.join(root, tableName)
-        if os.path.exists(tablePath + '/' + argList[1]):  
-          recordPath = os.path.join(tablePath, argList[1])
+        tableConfPath = findTableConfPath(tablePath)
+        primaryKeyIndex = findPrimaryKeyColumnIndex(tableConfPath)
+        if os.path.exists(tablePath + '/' + argList[primaryKeyIndex+1]):  
+          recordPath = os.path.join(tablePath, argList[primaryKeyIndex+1])
   argList.pop(tableIndex)
   if 'from' in argList: argList.remove('from')
   return [tablePath, recordPath]
@@ -110,9 +132,12 @@ def insertTable(tableAbsPath, argList):
 def deleteRecord(recordAbsPath):
   os.remove(recordAbsPath)
 
-def updateRecord(recordAbsPath, argList): 
+def updateRecord(tableAbsPath, recordAbsPath, argList): 
+  tableConfPath = findTableConfPath(tableAbsPath)
+  primaryKeyIndex = findPrimaryKeyColumnIndex(tableConfPath)
+  argList.pop(primaryKeyIndex)
   newRecord = open(recordAbsPath, 'w')
-  for arg in argList[1:]:
+  for arg in argList:
     newRecord.write(arg+'\n')
   newRecord.close()
 

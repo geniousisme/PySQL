@@ -7,7 +7,6 @@
 # if user dont use create database, then the DB default setting is in default Dir
 # 先求有，再求好，先把現在這版寫完，再來考慮有create database情況的事情
 # create 那邊的select DB 一定要再改好一點！！！
-########################## 使用者登錄那邊要改用檔案處理，密碼不要寫死
 # append to file那邊也要改用argFormatter的方式改寫
 
 import cmd
@@ -44,13 +43,22 @@ class PySQL(cmd.Cmd):
     self.prompt = 'chrisql>>> '
     self.authority = 'admin'
 
+  def do_register(self, args):
+    password   = getpass.getpass(prompt='type in your password:')
+    repassword = getpass.getpass(prompt='confirm your password:')
+    if password == repassword:
+      File.appendNewRecord(None, './dbConfig/useradmin', password+'\n')
+      print 'Register to PySQL suceessfully!!'
+    else:
+      print '[Error] the password you tyoe in are not the same :( Plz try again.'
+
   def do_login(self, args):
     password = getpass.getpass()
-    if  password == '5477cc0411':
+    if DBMS.isAdmin(password):
       self.prompt = 'chrisql>>> '
       self.authority = 'admin'
       if self.authority == 'admin': print 'you are boss in PySQL!!'    
-    elif password == 'user123':
+    elif DBMS.isUser(password):
       self.authority = 'user_admin'
       if self.authority == 'user_admin':  print 'hello, visiter, wellcome to PySQL :)'
     else: print '[Error] Wrong Password :( Plz try again.'
@@ -94,7 +102,10 @@ class PySQL(cmd.Cmd):
           if tablePrimaryKeyIndex >= 0:
             File.setPrimaryKeyColumn(self.tableConf, self.tableConfName, tableConfContent, tablePrimaryKeyIndex)
             self.primaryKeyExist = True
-          else: print '[Setting Error] No such column for primary key setting, try "set --help" or "set -h" to get help.'
+          elif tablePrimaryKeyIndex == -999:
+            print '[Setting Error] Primary key already set.'
+          else:
+            print '[Setting Error] No such column for primary key setting, try "set --help" or "set -h" to get help.'
         else: print '[Syntax Error] try "set --help" or "set -h" to get help.'
       else:
         dataType = match.group().split()[1]
@@ -185,7 +196,7 @@ class PySQL(cmd.Cmd):
         if selectTablePath is not None:
           if selectRecordPath is not None:
             if DBMS.MatchTableSetting(selectTablePath, argList, 'update'):
-              DBMS.updateRecord(selectRecordPath, argList)
+              DBMS.updateRecord(selectTablePath, selectRecordPath, argList)
           else: print '[Update Error] The record does not exist. Plz try "use --help" or "use -h" to get help.'
         else: print '[Update Error] The table does not exist. Plz try "use --help" or "use -h" to get help.'
       else: print '[Update Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
