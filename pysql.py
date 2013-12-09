@@ -17,8 +17,8 @@ import re
 import sys
 
 # the module defined by myself
-import dbms
-from dbms import DBMS
+import DBMS
+# from dbms import DBMS
 import File
 
 def str2List(str):
@@ -26,7 +26,7 @@ def str2List(str):
 
 def tableConfFormatter():
   print 'tableConfFormatter'
-DBMS = dbms.DBMS()
+# DBMS = dbms.DBMS()
 
 class PySQL(cmd.Cmd):
   
@@ -69,10 +69,13 @@ class PySQL(cmd.Cmd):
       else: 
         newTableName = match.group().split()[1]
         if not os.path.exists('./DB/default/' + newTableName): os.mkdir( './DB/default/' + newTableName )
-        else: '[Setting Error] The Relation already exists. Plz new another relation.'
+        else: print '[Setting Error] The Relation already exists. Plz new another relation.'
         self.tableConfName = './DB/default/'+newTableName+'/'+newTableName+'.conf'
     elif self.authority == 'user_admin':  print '[Error] authority not enough.'
-    else: print '[Error] authority not enough.'
+    else: 
+      print '[Error] authority not enough.'
+      # self._hist.pop()
+
   
   def do_DEFINE(self, args):
     self.do_define( args )
@@ -105,7 +108,8 @@ class PySQL(cmd.Cmd):
           columnName = argList.pop()
           charLength = argList.pop() if len(argList) > 2 else '128'
           File.appendNewRecord(self.tableConf, self.tableConfName, columnName + ': ' + dataType + ' ' + charLength + '\n')
-        else: print '[Syntax Error] try "set --help" or "set -h" to get help.'
+        else: 
+          print '[Syntax Error] try "set --help" or "set -h" to get help.'
 
   def do_SET(self, args):
     self.do_set( args )
@@ -242,12 +246,13 @@ class PySQL(cmd.Cmd):
       self.do_exit(line)
     elif self.cmd == 'hist':
       self._hist.pop()
-      self.do_hist(line)
+      # self.do_hist(line)
     elif len(self._hist) >= 2: 
       if (self._hist[len(self._hist)-2].find('define') >= 0) and (self.cmd != 'set'):
-        print "[Error] Plz finish relation setting first."
-        self._hist.pop()
-        line = ''
+        if self.authority == 'admin':
+          print "[Error] Plz finish relation setting first."
+          self._hist.pop()
+          line = ''
     # print 'line:', line
     return line
 
