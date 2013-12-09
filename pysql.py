@@ -18,6 +18,7 @@ import sys
 
 # the module defined by myself
 import DBMS
+# from dbms import DBMS
 import File
 
 def str2List(str):
@@ -25,15 +26,16 @@ def str2List(str):
 
 def tableConfFormatter():
   print 'tableConfFormatter'
-
+# DBMS = dbms.DBMS()
 
 class PySQL(cmd.Cmd):
-
+  
   def __init__(self):
     cmd.Cmd.__init__(self)
     self.prompt = 'pysql>>> '
     self.intro  = "****** Chris Hsu own SQL DB for DBMS project by Python ******"
     self.authority = 'user'
+
   def do_hist(self, args):
     """Print a list of commands that have been entered"""
     print self._hist
@@ -67,10 +69,13 @@ class PySQL(cmd.Cmd):
       else: 
         newTableName = match.group().split()[1]
         if not os.path.exists('./DB/default/' + newTableName): os.mkdir( './DB/default/' + newTableName )
-        else: '[Setting Error] The Relation already exists. Plz new another relation.'
+        else: print '[Setting Error] The Relation already exists. Plz new another relation.'
         self.tableConfName = './DB/default/'+newTableName+'/'+newTableName+'.conf'
     elif self.authority == 'user_admin':  print '[Error] authority not enough.'
-    else: print '[Error] authority not enough.'
+    else: 
+      print '[Error] authority not enough.'
+      # self._hist.pop()
+
   
   def do_DEFINE(self, args):
     self.do_define( args )
@@ -103,7 +108,8 @@ class PySQL(cmd.Cmd):
           columnName = argList.pop()
           charLength = argList.pop() if len(argList) > 2 else '128'
           File.appendNewRecord(self.tableConf, self.tableConfName, columnName + ': ' + dataType + ' ' + charLength + '\n')
-        else: print '[Syntax Error] try "set --help" or "set -h" to get help.'
+        else: 
+          print '[Syntax Error] try "set --help" or "set -h" to get help.'
 
   def do_SET(self, args):
     self.do_set( args )
@@ -155,6 +161,7 @@ class PySQL(cmd.Cmd):
     self.do_show( args )
 
   def do_use(self, args): #assign which DB to use 
+    
     if args in DBMS.findAllDBs(): self.selectDB = './DB/' + args + '/'
     else: print '[Use Error] There is no such DB, check again!!'
 
@@ -163,14 +170,12 @@ class PySQL(cmd.Cmd):
   
   def do_select(self, args):
     argList = str2List(args)
-    if self.authority == 'admin':
-      if self.selectDB is not None:
-        selectTablePath = DBMS.findTableAndRecordPath(self.selectDB ,argList)[0]
-        if selectTablePath is not None:
-          DBMS.selectRecords(selectTablePath, argList)
-        else: print '[Select Error] The table does not exist. Plz try "use --help" or "use -h" to get help.'
-      else: print '[Select Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
-    else: print '[Error] authority not enough.'
+    if self.selectDB is not None:
+      selectTablePath = DBMS.findTableAndRecordPath(self.selectDB ,argList)[0]
+      if selectTablePath is not None:
+        DBMS.selectRecords(selectTablePath, argList)
+      else: print '[Select Error] The table does not exist. Plz try "use --help" or "use -h" to get help.'
+    else: print '[Select Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
   
   def do_update(self, args):
     argList = str2List(args)
@@ -231,7 +236,7 @@ class PySQL(cmd.Cmd):
         it has been interpreted. If you want to modifdy the input line
         before execution (for example, variable substitution) do it here.
     """
-    print "pre command, line:", line.strip()
+    # print "pre command, line:", line.strip()
 
     if line.strip() != '':  self.cmd = line.strip().split()[0]
     self._hist += [ line.strip() ]
@@ -241,21 +246,22 @@ class PySQL(cmd.Cmd):
       self.do_exit(line)
     elif self.cmd == 'hist':
       self._hist.pop()
-      self.do_hist(line)
+      # self.do_hist(line)
     elif len(self._hist) >= 2: 
       if (self._hist[len(self._hist)-2].find('define') >= 0) and (self.cmd != 'set'):
-        print "[Error] Plz finish relation setting first."
-        self._hist.pop()
-        line = ''
-    print 'line:', line
+        if self.authority == 'admin':
+          print "[Error] Plz finish relation setting first."
+          self._hist.pop()
+          line = ''
+    # print 'line:', line
     return line
 
   def postcmd(self, stop, line):
     """If you want to stop the console, return something that evaluates to true.
        If you want to do some post command processing, do it here.
     """
-    print "post command, line:", line.strip()  
-    print "there is stop:", stop
+    # print "post command, line:", line.strip()  
+    # print "there is stop:", stop
     return stop
   
   

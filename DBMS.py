@@ -8,6 +8,7 @@ import os
 import glob
 import File
 
+
 def columnStr2List(columnStr):
   return columnStr.replace(" ","").split(',')
 
@@ -51,16 +52,6 @@ def findTableAndRecordPath(databasePath, argList):
   if 'from' in argList: argList.remove('from')
   return [tablePath, recordPath]
 
-# def findAllTables2PathDict(relationPath):
-#   tableName2PathDict = {}
-#   for root, dirs, files in os.walk('./DB/default/STUDENT/STUDENT_DB', topdown=False):
-#     for fileName in files:
-#       # tableName2PathDict[fileName] = os.path.join(root, fileName)
-#       print os.path.join(root, fileName)
-  #   for dirName in dirs:
-  #     # tableName2PathDict[dirName] = os.path.join(root, dirName)
-  #     print os.path.join(root, dirName)
-  # # return tableName2PathDict
 
 def findAllDBs():
   return os.listdir('./DB')
@@ -68,7 +59,7 @@ def findAllDBs():
 def MatchTableSetting(tableAbsPath, argList, sqlType):
   argList.pop
   tableConfPath = findTableConfPath(tableAbsPath)
-  print 'tableConfPath', tableConfPath
+  # print 'tableConfPath', tableConfPath
   tableConf = open(tableConfPath, 'r')
   
   if os.path.exists(tableAbsPath + '/' + argList[0]) and sqlType == 'insert':
@@ -79,8 +70,8 @@ def MatchTableSetting(tableAbsPath, argList, sqlType):
   for line in tableConf.readlines():
     lineList = line.split()
     arg = argIter.next()
-    print "lineList:", lineList
-    print "arg:", arg
+    # print "lineList:", lineList
+    # print "arg:", arg
 
     if lineList[0].find('*') >= 0:
       if arg == 'null' or arg == 'nil':  
@@ -109,9 +100,7 @@ def MatchTableSetting(tableAbsPath, argList, sqlType):
   return True
 
 def insertTable(tableAbsPath, argList):
-  # print 'insert'
   tableConfPath = findTableConfPath(tableAbsPath)
-  print 'tableConfPath', tableConfPath
   primaryKeyIndex = findPrimaryKeyColumnIndex(tableConfPath)
   newTable = open(tableAbsPath + '/' + argList.pop(primaryKeyIndex), 'a+')
   for arg in argList:
