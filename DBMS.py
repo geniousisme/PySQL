@@ -30,7 +30,6 @@ def isUser(password):
   userAdminFile = open('./dbConfig/useradmin', 'r')
   userPasswordList = userAdminFile.read().splitlines()
   userAdminFile.close()
-
   if password in userPasswordList:
     return True
   else:
@@ -40,7 +39,6 @@ def isAdmin(password):
   sysAdminFile = open('./dbConfig/sysadmin', 'r')
   sysPasswordList = sysAdminFile.read().splitlines()
   sysAdminFile.close()
-
   if password in sysPasswordList:
     return True
   else:
