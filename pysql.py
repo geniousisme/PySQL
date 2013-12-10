@@ -17,10 +17,11 @@ import sys
 
 # the module defined by myself
 import DBMS
-# from dbms import DBMS
 import File
 
 def str2List(str):
+  fromIndex = str.find('from')
+  if fromIndex >= 0:  str = str[:fromIndex].replace(' ','') + ' ' + str[fromIndex:]
   return str.split()
 
 def tableConfFormatter():
@@ -160,6 +161,9 @@ class PySQL(cmd.Cmd):
       else: print '[Insert Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
     else: print '[Error] authority not enough.'
 
+  def do_INSERT(self, args):
+    self.do_insert( args )
+
   def do_show(self, args): #show all DB/tables
     if args == 'databases' or args == 'DATABASES':
       print "###################"
@@ -187,6 +191,9 @@ class PySQL(cmd.Cmd):
       else: print '[Select Error] The table does not exist. Plz try "use --help" or "use -h" to get help.'
     else: print '[Select Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
   
+  def do_SELECT(self, args):
+    self.do_select( args )
+  
   def do_update(self, args):
     argList = str2List(args)
     if self.authority == 'admin':
@@ -201,6 +208,9 @@ class PySQL(cmd.Cmd):
       else: print '[Update Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
     else: print '[Error] authority not enough.'
 
+  def do_UPDATE(self, args):
+    self.do_update( args )
+
   
   def do_delete(self, args):
     argList = str2List(args)
@@ -214,6 +224,9 @@ class PySQL(cmd.Cmd):
         else: print '[Delete Error] The table does not exist. Plz try "use --help" or "use -h" to get help.'
       else: print '[Delete Error] Choose the DB first. Plz try "use --help" or "use -h" to get help.'
     else: print '[Error] authority not enough.'
+
+  def do_DELETE(self, args):
+    self.do_delete( args )
 
   def emptyline(self):    
     """Do nothing on empty input line"""
