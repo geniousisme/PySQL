@@ -25,7 +25,6 @@ def str2List(str):
 
 def tableConfFormatter():
   print 'tableConfFormatter'
-# DBMS = dbms.DBMS()
 
 class PySQL(cmd.Cmd):
   
@@ -57,10 +56,10 @@ class PySQL(cmd.Cmd):
     if DBMS.isAdmin(password):
       self.prompt = 'chrisql>>> '
       self.authority = 'admin'
-      if self.authority == 'admin': print 'you are boss in PySQL!!'    
+      print 'you are boss in PySQL!!'    
     elif DBMS.isUser(password):
       self.authority = 'user_admin'
-      if self.authority == 'user_admin':  print 'hello, visiter, wellcome to PySQL :)'
+      print 'hello, visiter, wellcome to PySQL :)'
     else: print '[Error] Wrong Password :( Plz try again.'
 
   def do_logout(self, args):
