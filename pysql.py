@@ -5,9 +5,9 @@
 # default(DB) -> Dir(Relation, ex.STUDENT is a relation, STUDENT.conf is the relation attribute setting config file)
 # And STUDENT_DB is the table we set for demo from STUDENT relation, the column attribute follow the conf file
 # if user dont use create database, then the DB default setting is in default Dir
-# 先求有，再求好，先把現在這版寫完，再來考慮有create database情況的事情
 # create 那邊的select DB 一定要再改好一點！！！
 # append to file那邊也要改用argFormatter的方式改寫
+# 增加對set的偵錯
 
 import cmd
 import getpass
@@ -169,6 +169,11 @@ class PySQL(cmd.Cmd):
       print "###################"
       for DB in os.listdir('./DB'):
         print DB 
+      print "###################"
+    elif args == 'tables' or args == 'TABLES':
+      print "###################"
+      for table in os.listdir('./DB/default'):
+        print table 
       print "###################"
   
   def do_SHOW(self, args):

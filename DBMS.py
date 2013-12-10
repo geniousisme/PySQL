@@ -170,6 +170,7 @@ def whereConditionsCheck(recordAbsPath, argList, Column2IndexDict):
     print '[Select Error] Condition can not be recognized. Plz try select --help or select -h for help'
     return False
 
+#先找table => 找tableConf => 讀出每一個column(除了primaryKeyColumn)所在row的index(primarykey之後的column記得原來的index數-1) => 進入所有record中判斷條件 => 符合條件就print出
 def selectRecords(tableAbsPath, argList):
   Column2IndexDict = getAllColumn2IndexDict(tableAbsPath)
   selectedColumnList = columnStr2List( argList[0] ) if argList[0]!='*' else sortedByValueDictFormatter(Column2IndexDict)
@@ -185,8 +186,7 @@ def selectRecords(tableAbsPath, argList):
         for columnName in selectedColumnList:
           print columnName, recordLineList[Column2IndexDict[columnName]]
         print '--------------------------------'
-  #先找table => 找tableConf => 讀出每一個column(除了primaryKeyColumn)所在row的index(primarykey之後的column記得原來的index數-1) => 進入所有record中判斷條件 => 符合條件就print出
-
+  
 
 
 
