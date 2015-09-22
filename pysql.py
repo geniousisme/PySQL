@@ -5,9 +5,6 @@
 # default(DB) -> Dir(Relation, ex.STUDENT is a relation, STUDENT.conf is the relation attribute setting config file)
 # And STUDENT_DB is the table we set for demo from STUDENT relation, the column attribute follow the conf file
 # if user dont use create database, then the DB default setting is in default Dir
-# create 那邊的select DB 一定要再改好一點！！！
-# append to file那邊也要改用argFormatter的方式改寫
-# 增加對set的偵錯
 
 import cmd
 import getpass
@@ -19,14 +16,13 @@ import sys
 import DBMS
 import File
 
+#change the command line to array
 def str2List(str):
   fromIndex = str.find('from')
   if fromIndex >= 0:  str = str[:fromIndex].replace(' ','') + ' ' + str[fromIndex:]
   return str.split()
 
-def tableConfFormatter():
-  print 'tableConfFormatter'
-
+#main function of PySQL
 class PySQL(cmd.Cmd):
   
   def __init__(self):
@@ -35,14 +31,15 @@ class PySQL(cmd.Cmd):
     self.intro  = "****** Chris Hsu own SQL DB for DBMS project by Python ******"
     self.authority = 'user'
 
+#see the command line u have typed in
   def do_hist(self, args):
     """Print a list of commands that have been entered"""
     print self._hist
-
+#shortcut to enter admin
   def do_root(self, args):
     self.prompt = 'chrisql>>> '
     self.authority = 'admin'
-
+#sign up for PySQL
   def do_register(self, args):
     password   = getpass.getpass(prompt='type in your password:')
     repassword = getpass.getpass(prompt='confirm your password:')
@@ -78,29 +75,24 @@ class PySQL(cmd.Cmd):
         newTableName = match.group().split()[1]
         if not os.path.exists('./DB/default/' + newTableName): os.mkdir( './DB/default/' + newTableName )
         else: print '[Setting Error] The Relation already exists. Plz new another relation.'
-        self.tableConfName = './DB/default/'+newTableName+'/'+newTableName+'.conf'
+        self.tableConfPath = './DB/default/'+newTableName+'/'+newTableName+'.conf'
     elif self.authority == 'user_admin':  print '[Error] authority not enough.'
     else: 
       print '[Error] authority not enough.'
-      # self._hist.pop()
-
   
   def do_DEFINE(self, args):
     self.do_define( args )
-
+#primary key & column name judge
   def do_set(self, args):
-    # print 'set command!!!'
     if self.authority == 'admin':
-      # args = args.split()[0].lower() + ' ' + args.split()[1]
-      # print 'args:', args
       match = re.search('attribute\s*\w*', args)
       if match is None:
         if re.search('primary\s*key\s*\w*', args):
-          argList = args.split()
+          argList = str2List(args)
           columnName = argList.pop()
-          tableConfContent, tablePrimaryKeyIndex = File.findContentAndPrimaryKeyIndex(self.tableConf, self.tableConfName, columnName)
+          tableConfContent, tablePrimaryKeyIndex = File.findContentAndPrimaryKeyIndex(self.tableConf, self.tableConfPath, columnName)
           if tablePrimaryKeyIndex >= 0:
-            File.setPrimaryKeyColumn(self.tableConf, self.tableConfName, tableConfContent, tablePrimaryKeyIndex)
+            File.setPrimaryKeyColumn(self.tableConf, self.tableConfPath, tableConfContent, tablePrimaryKeyIndex)
             self.primaryKeyExist = True
           elif tablePrimaryKeyIndex == -999:
             print '[Setting Error] Primary key already set.'
@@ -108,39 +100,26 @@ class PySQL(cmd.Cmd):
             print '[Setting Error] No such column for primary key setting, try "set --help" or "set -h" to get help.'
         else: print '[Syntax Error] try "set --help" or "set -h" to get help.'
       else:
-        dataType = match.group().split()[1]
-        if dataType == 'integer':
-          argList = args.split()
-          columnName = argList.pop(2)
-          intRange = ' '.join(argList[-3:]) if len(argList) > 2 else 'range '+ str(-sys.maxint-1) + ' ' + str(sys.maxint)
-          File.appendNewRecord(self.tableConf, self.tableConfName, columnName + ': ' + dataType + ' ' + intRange + '\n')  
-        elif dataType == 'character':
-          argList = args.split()
-          columnName = argList.pop()
-          charLength = argList.pop() if len(argList) > 2 else '128'
-          File.appendNewRecord(self.tableConf, self.tableConfName, columnName + ': ' + dataType + ' ' + charLength + '\n')
-        else: 
-          print '[Syntax Error] try "set --help" or "set -h" to get help.'
+        tableConfContent = File.findContentAndPrimaryKeyIndex(None, self.tableConfPath, '')[0]
+        DBMS.setRelation(match, str2List(args), self.tableConfPath, tableConfContent)
+    else: 
+      print '[Error] authority not enough.'
 
   def do_SET(self, args):
     self.do_set( args )
-
+#create the table folder to save record
   def do_create(self, args):
     argList = args.split()
     if argList[0] == 'table' or argList[0] == 'TABLE':
       if self.authority == 'admin': 
-        # tmpRelationName = './DB/default/' + argList[1] + '/'
         tmpDBName = './DB/default/'
         tmpTableConfName = tmpDBName + argList[1] + '/' + argList[1] + '.conf'
         if os.path.exists(tmpTableConfName): 
-          # self.selectRelation = tmpRelationName
           self.selectDB = tmpDBName
           tmpTableConf = open(tmpTableConfName, 'r')
           if tmpTableConf.read().find('*') >= 0 or self.primaryKeyExist: 
             tmpTableConf.close()
             os.mkdir('./DB/default/' + argList[1] + '/' + argList[2] + '/')
-            # newTable = open('./DB/default/' + argList[1] + '/' + argList[2] + '/' + argList[2], 'a')
-            # newTable.close()
           else: '[Setting Error] No column was set as primary key, try "set --help" or "set -h" to get help.'
         else: print '[Relation Error] There is no such relation. Plz try "set --help" or "set -h" to get help.'
       else: print '[Error] authority not enough.'
@@ -148,7 +127,7 @@ class PySQL(cmd.Cmd):
 
   def do_CREATE(self, args):
     self.do_create( args )   
-  
+#insert record for table  
   def do_insert(self, args):
     argList = args.split()
     if self.authority == 'admin':
@@ -163,8 +142,9 @@ class PySQL(cmd.Cmd):
 
   def do_INSERT(self, args):
     self.do_insert( args )
-
+#can show columns/DBs/tables
   def do_show(self, args): #show all DB/tables
+    argList = str2List(args)
     if args == 'databases' or args == 'DATABASES':
       print "###################"
       for DB in os.listdir('./DB'):
@@ -175,10 +155,18 @@ class PySQL(cmd.Cmd):
       for table in os.listdir('./DB/default'):
         print table 
       print "###################"
+    elif argList[1] == 'columns' or argList[1] == 'COLUMNS':
+      print "###################"
+      if self.selectDB is not None:
+        selectTablePath = DBMS.findTableAndRecordPath(self.selectDB, argList)[0]
+        Column2IndexDict = DBMS.getAllColumn2IndexDict(selectTablePath)
+        for column in Column2IndexDict.keys():
+          print column
+      print "###################"
   
   def do_SHOW(self, args):
     self.do_show( args )
-
+#choose which databases u want
   def do_use(self, args): #assign which DB to use 
     
     if args in DBMS.findAllDBs(): self.selectDB = './DB/' + args + '/'
@@ -186,7 +174,7 @@ class PySQL(cmd.Cmd):
 
   def do_USE(self, args):
     self.do_use( args )
-  
+#following detail, plz see the DBMS.py file
   def do_select(self, args):
     argList = str2List(args)
     if self.selectDB is not None:
@@ -232,7 +220,7 @@ class PySQL(cmd.Cmd):
 
   def do_DELETE(self, args):
     self.do_delete( args )
-
+#deal with the empty input
   def emptyline(self):    
     """Do nothing on empty input line"""
     pass
@@ -258,38 +246,31 @@ class PySQL(cmd.Cmd):
     """
     cmd.Cmd.postloop(self)   ## Clean up command completion
     print "Exiting PySQL..."
-
+#excute before the cmd execution
   def precmd(self, line):
     """ This method is called after the line has been input but before
         it has been interpreted. If you want to modifdy the input line
         before execution (for example, variable substitution) do it here.
     """
-    # print "pre command, line:", line.strip()
 
     if line.strip() != '':  self.cmd = line.strip().split()[0]
     self._hist += [ line.strip() ]
-    # print self._hist
-    # print self._hist[len(self._hist)-2]
     if self.cmd == 'exit':
       self.do_exit(line)
     elif self.cmd == 'hist':
       self._hist.pop()
-      # self.do_hist(line)
     elif len(self._hist) >= 2: 
       if (self._hist[len(self._hist)-2].find('define') >= 0) and (self.cmd != 'set'):
         if self.authority == 'admin':
           print "[Error] Plz finish relation setting first."
           self._hist.pop()
           line = ''
-    # print 'line:', line
     return line
-
+#execute after cmd execution
   def postcmd(self, stop, line):
     """If you want to stop the console, return something that evaluates to true.
        If you want to do some post command processing, do it here.
     """
-    # print "post command, line:", line.strip()  
-    # print "there is stop:", stop
     return stop
   
   

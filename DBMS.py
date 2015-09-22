@@ -1,26 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
-#合併inser & update record
-#想辦法改成class寫法
-#whereConditionCheck想辦法加上and之後的複合條件判斷 & *:全部欄位的顯示
 
 import os
+import sys
 import glob
 import File
-
+#column string to array
 def columnStr2List(columnStr):
   return columnStr.replace(" ","").split(',')
-
+#get the selected column name
 def getColumnName(tableConfLine):
   return tableConfLine.split()[0].replace(':','')
-
+#sort the dict(hash) by value
 def sortedByValueDictFormatter(Dict):
   tupleList = sorted(Dict.items(), key=lambda x: x[1])
   return [ tuple[0] for tuple in tupleList ]
-
+#find the table conf path
 def findTableConfPath(tableAbsPath):
     return [tableConfPath for tableConfPath in glob.glob(os.path.dirname(tableAbsPath) + "/*.conf")][0]
-
+#find primary key column from table conf file
 def findPrimaryKeyColumnIndex(tableConfPath):
   primaryKeyIndex = None
   tableConf = open(tableConfPath, 'r')
@@ -28,7 +26,7 @@ def findPrimaryKeyColumnIndex(tableConfPath):
     if line.find('*') >= 0: primaryKeyIndex = index 
   tableConf.close()
   return primaryKeyIndex
-
+#check the permission is useradmin or not
 def isUser(password):
   userAdminFile = open('./dbConfig/useradmin', 'r')
   userPasswordList = userAdminFile.read().splitlines()
@@ -37,7 +35,7 @@ def isUser(password):
     return True
   else:
     return False
-
+#check the permission is sysadmin or not
 def isAdmin(password):
   sysAdminFile = open('./dbConfig/sysadmin', 'r')
   sysPasswordList = sysAdminFile.read().splitlines()
@@ -47,7 +45,7 @@ def isAdmin(password):
   else:
     return False
 
-
+#get all column name and their index line from table conf file
 def getAllColumn2IndexDict(tableAbsPath):
   tableConf = open(findTableConfPath(tableAbsPath), 'r')
   column2IndexDict = {}
@@ -59,7 +57,7 @@ def getAllColumn2IndexDict(tableAbsPath):
       lineIndex += 1
   tableConf.close()
   return column2IndexDict
-
+#find selected table and record path
 def findTableAndRecordPath(databasePath, argList):
   recordPath = tablePath = None
   tableIndex = 0 if 'from' not in argList else argList.index('from') + 1 
@@ -69,8 +67,9 @@ def findTableAndRecordPath(databasePath, argList):
         tablePath = os.path.join(root, tableName)
         tableConfPath = findTableConfPath(tablePath)
         primaryKeyIndex = findPrimaryKeyColumnIndex(tableConfPath)
-        if os.path.exists(tablePath + '/' + argList[primaryKeyIndex+1]):  
-          recordPath = os.path.join(tablePath, argList[primaryKeyIndex+1])
+        if len(argList) > 2:
+          if os.path.exists(tablePath + '/' + argList[primaryKeyIndex+1]):   
+            recordPath = os.path.join(tablePath, argList[primaryKeyIndex+1])
   argList.pop(tableIndex)
   if 'from' in argList: argList.remove('from')
   return [tablePath, recordPath]
@@ -78,7 +77,7 @@ def findTableAndRecordPath(databasePath, argList):
 
 def findAllDBs():
   return os.listdir('./DB')
-
+#judge the input command line matches the rule we define or not
 def MatchTableSetting(tableAbsPath, argList, sqlType):
   argList.pop
   tableConfPath = findTableConfPath(tableAbsPath)
@@ -121,7 +120,24 @@ def MatchTableSetting(tableAbsPath, argList, sqlType):
 
   tableConf.close()
   return True
+#setup relation file
+def setRelation(matchObj, argList, tableConfPath, tableConfContent):
+  dataType = matchObj.group().split()[1]
+  if dataType != 'integer' and dataType != 'character':
+    print '[Syntax Error] try "set --help" or "set -h" to get help.'
+    return None
+  elif dataType == 'integer':
+    columnName = argList.pop(2)
+    range = ' '.join(argList[-3:]) if len(argList) > 2 else 'range '+ str(-sys.maxint-1) + ' ' + str(sys.maxint)
+  elif dataType == 'character':
+    columnName = argList.pop()
+    range =  argList.pop() if len(argList) > 2 else '128'
+  if tableConfContent.find(columnName) < 0: 
+    File.appendNewRecord(None, tableConfPath, columnName + ': ' + dataType + ' ' + range + '\n') 
+  else:
+    print '[Setting Error] The column name already exist. Plz try "set --help" or "set -h" to get help.'
 
+#insert record into table 
 def insertTable(tableAbsPath, argList):
   tableConfPath = findTableConfPath(tableAbsPath)
   primaryKeyIndex = findPrimaryKeyColumnIndex(tableConfPath)
@@ -141,7 +157,7 @@ def updateRecord(tableAbsPath, recordAbsPath, argList):
   for arg in argList:
     newRecord.write(arg+'\n')
   newRecord.close()
-
+#judge the condition for select-where part
 def whereConditionsCheck(recordAbsPath, argList, Column2IndexDict):
   whereIndex = argList.index('where')
   columnName, whereCondition, whereLimit = argList[whereIndex+1:]
